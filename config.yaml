@@ -1,0 +1,18 @@
+gmat:
+  # Path to your GMAT installation directory
+  path: "/Applications/GMAT/R2022a"
+  # Binary name inside <path>/bin/
+  binary: "GMAT-R2022a"
+  # Headless run timeout in seconds
+  timeout: 120
+  # Set to true to use mock engine when GMAT is not installed
+  mock_when_missing: true
+
+server:
+  host: "127.0.0.1"
+  port: 8000
+
+llm:
+  model: "claude-sonnet-4-6"
+  max_tokens: 8096
+  temperature: 0.2
