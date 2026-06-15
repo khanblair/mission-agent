@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import AsyncIterator
-from pathlib import Path
 from typing import Any
 
 from ..config import settings
@@ -42,12 +41,13 @@ class AgentLoop:
 
         max_iterations = 8
         iteration = 0
+        last_text: list[str] = []
 
         while iteration < max_iterations:
             iteration += 1
             text_chunks: list[str] = []
             tool_calls: list[dict[str, Any]] = []
-            stop_reason: str = "end_turn"
+            stop_reason: str = "stop"
 
             async for event_type, data in stream_response(
                 messages=messages, system=full_system, tools=TOOL_SCHEMAS
@@ -60,53 +60,53 @@ class AgentLoop:
                 elif event_type == "stop":
                     stop_reason = data
 
-            # Build assistant content block
-            assistant_content: list[dict[str, Any]] = []
+            last_text = text_chunks
+
+            # Build OpenAI-format assistant message
+            assistant_msg: dict[str, Any] = {"role": "assistant"}
             if text_chunks:
-                assistant_content.append({"type": "text", "text": "".join(text_chunks)})
-            for tc in tool_calls:
-                assistant_content.append({
-                    "type": "tool_use",
-                    "id": tc["id"],
-                    "name": tc["name"],
-                    "input": tc["input"],
-                })
+                assistant_msg["content"] = "".join(text_chunks)
+            if tool_calls:
+                assistant_msg["tool_calls"] = [
+                    {
+                        "id": tc["id"],
+                        "type": "function",
+                        "function": {
+                            "name": tc["name"],
+                            "arguments": json.dumps(tc["input"]),
+                        },
+                    }
+                    for tc in tool_calls
+                ]
 
-            messages.append({"role": "assistant", "content": assistant_content})
+            messages.append(assistant_msg)
 
-            if not tool_calls or stop_reason == "end_turn":
+            if not tool_calls or stop_reason in ("stop", "end_turn"):
                 break
 
-            # Execute tools and collect results
-            tool_results: list[dict[str, Any]] = []
+            # Execute tools and append results as individual tool messages
             for tc in tool_calls:
                 logger.info("Executing tool: %s(%s)", tc["name"], list(tc["input"].keys()))
                 try:
                     result = await execute_tool(tc["name"], tc["input"])
-                    # Store run data for WS completion signal
                     if tc["name"] == "run_script" and "run_id" in result:
                         self.last_run_data = result
                 except Exception as exc:
                     result = {"error": str(exc)}
 
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": tc["id"],
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
                     "content": json.dumps(result),
                 })
 
-                # Yield a status line so the user knows what's happening
                 if tc["name"] == "run_script":
-                    yield f"\n\n*Running orbital simulation…*\n\n"
+                    yield "\n\n*Running orbital simulation…*\n\n"
                 elif tc["name"] == "validate_script":
-                    r = result
-                    if r.get("ok"):
-                        yield f"\n\n*Script validated — no issues.*\n\n"
+                    if result.get("ok"):
+                        yield "\n\n*Script validated — no issues.*\n\n"
                     else:
-                        errs = "; ".join(r.get("errors", []))
+                        errs = "; ".join(result.get("errors", []))
                         yield f"\n\n*Validation issues: {errs}*\n\n"
 
-            messages.append({"role": "user", "content": tool_results})
-
-        # Update history with the full exchange
-        self.history.append({"role": "assistant", "content": "".join(text_chunks)})
+        self.history.append({"role": "assistant", "content": "".join(last_text)})

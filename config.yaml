@@ -13,6 +13,6 @@ server:
   port: 8000
 
 llm:
-  model: "claude-sonnet-4-6"
+  model: "deepseek-chat"
   max_tokens: 8096
   temperature: 0.2

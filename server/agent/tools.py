@@ -15,67 +15,82 @@ from ..engine.groundtrack import ephemeris_to_groundtrack, split_groundtrack_seg
 from ..engine.czml_converter import ephemeris_to_czml
 from .validators import validate_script, validate_results, sso_inclination, hohmann_dv
 
-# ── Tool schemas (Claude tool-use format) ─────────────────────────────────────
+# ── Tool schemas (OpenAI / DeepSeek function-calling format) ──────────────────
 
 TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
-        "name": "get_template",
-        "description": "Retrieve a validated GMAT script template by workflow ID. Use this before generating a script to get the correct structure.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "template_id": {
-                    "type": "string",
-                    "enum": ["leo_propagate", "sunsync_design", "ground_contact", "hohmann_transfer", "deorbit_lifetime"],
-                    "description": "Which template to retrieve",
-                }
+        "type": "function",
+        "function": {
+            "name": "get_template",
+            "description": "Retrieve a validated GMAT script template by workflow ID. Use this before generating a script to get the correct structure.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "template_id": {
+                        "type": "string",
+                        "enum": ["leo_propagate", "sunsync_design", "ground_contact", "hohmann_transfer", "deorbit_lifetime"],
+                        "description": "Which template to retrieve",
+                    }
+                },
+                "required": ["template_id"],
             },
-            "required": ["template_id"],
         },
     },
     {
-        "name": "validate_script",
-        "description": "Check a GMAT script for physics errors and structural issues before running it. Always call this before run_script.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "script": {"type": "string", "description": "The GMAT script to validate"}
+        "type": "function",
+        "function": {
+            "name": "validate_script",
+            "description": "Check a GMAT script for physics errors and structural issues before running it. Always call this before run_script.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "script": {"type": "string", "description": "The GMAT script to validate"}
+                },
+                "required": ["script"],
             },
-            "required": ["script"],
         },
     },
     {
-        "name": "run_script",
-        "description": "Execute a GMAT script and return orbit data, ground track, and 3D visualization data. Only call after validate_script returns ok=true.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "script": {"type": "string", "description": "The validated GMAT script to run"}
+        "type": "function",
+        "function": {
+            "name": "run_script",
+            "description": "Execute a GMAT script and return orbit data, ground track, and 3D visualization data. Only call after validate_script returns ok=true.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "script": {"type": "string", "description": "The validated GMAT script to run"}
+                },
+                "required": ["script"],
             },
-            "required": ["script"],
         },
     },
     {
-        "name": "compute_sso_inclination",
-        "description": "Compute the sun-synchronous inclination for a given circular orbit altitude using the J2 nodal precession formula.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "altitude_km": {"type": "number", "description": "Circular orbit altitude in km"}
+        "type": "function",
+        "function": {
+            "name": "compute_sso_inclination",
+            "description": "Compute the sun-synchronous inclination for a given circular orbit altitude using the J2 nodal precession formula.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "altitude_km": {"type": "number", "description": "Circular orbit altitude in km"}
+                },
+                "required": ["altitude_km"],
             },
-            "required": ["altitude_km"],
         },
     },
     {
-        "name": "compute_hohmann_dv",
-        "description": "Compute the delta-v for a Hohmann transfer between two circular orbits.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "initial_altitude_km": {"type": "number"},
-                "target_altitude_km": {"type": "number"},
+        "type": "function",
+        "function": {
+            "name": "compute_hohmann_dv",
+            "description": "Compute the delta-v for a Hohmann transfer between two circular orbits.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "initial_altitude_km": {"type": "number"},
+                    "target_altitude_km": {"type": "number"},
+                },
+                "required": ["initial_altitude_km", "target_altitude_km"],
             },
-            "required": ["initial_altitude_km", "target_altitude_km"],
         },
     },
 ]
