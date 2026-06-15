@@ -19,6 +19,7 @@ def parse_ephemeris(path: Path) -> list[dict[str, float]]:
         if len(parts) < 8:
             continue
         try:
+            # Date is first 4 tokens: "DD Mon YYYY HH:MM:SS.mmm"
             t_str = " ".join(parts[:4])
             x, y, z, vx, vy, vz = [float(v) for v in parts[4:10]]
             rows.append({"t": t_str, "x": x, "y": y, "z": z, "vx": vx, "vy": vy, "vz": vz})
@@ -48,7 +49,7 @@ def parse_orbit_elements(path: Path) -> list[dict[str, Any]]:
 
 
 def parse_contact_report(path: Path) -> list[dict[str, Any]]:
-    """Parse ground station contact report."""
+    """Parse ground station contact report → list of {station, start, stop, duration_min, max_elevation}."""
     if not path.exists():
         return []
 

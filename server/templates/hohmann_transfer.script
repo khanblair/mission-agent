@@ -1,0 +1,102 @@
+%General Mission Analysis Tool(GMAT) Script
+%Template: Hohmann Transfer
+%Purpose: Execute a two-burn Hohmann transfer between two circular orbits.
+%         Reports total delta-v and transfer orbit parameters.
+
+%---------- Spacecraft
+Create Spacecraft SC;
+GMAT SC.DateFormat = UTCGregorian;
+GMAT SC.Epoch = '01 Jan 2024 00:00:00.000';
+GMAT SC.CoordinateSystem = EarthMJ2000Eq;
+GMAT SC.DisplayStateType = Keplerian;
+GMAT SC.SMA = 6778.0;
+GMAT SC.ECC = 0.001;
+GMAT SC.INC = 28.5;
+GMAT SC.RAAN = 0.0;
+GMAT SC.AOP = 0.0;
+GMAT SC.TA = 0.0;
+GMAT SC.DryMass = 500.0;
+GMAT SC.Cd = 2.2;
+GMAT SC.Cr = 1.8;
+GMAT SC.DragArea = 5.0;
+GMAT SC.SRPArea = 5.0;
+GMAT SC.Tanks = {Tank};
+GMAT SC.Thrusters = {Thruster};
+
+Create ChemicalTank Tank;
+GMAT Tank.AllowNegativeFuelMass = false;
+GMAT Tank.FuelMass = 500.0;
+
+Create ChemicalThruster Thruster;
+GMAT Thruster.CoordinateSystem = Local;
+GMAT Thruster.Origin = Earth;
+GMAT Thruster.Axes = VNB;
+GMAT Thruster.ThrustDirection1 = 1;
+GMAT Thruster.ThrustDirection2 = 0;
+GMAT Thruster.ThrustDirection3 = 0;
+GMAT Thruster.Tank = {Tank};
+
+%---------- Maneuvers
+Create ImpulsiveBurn DVA;
+GMAT DVA.CoordinateSystem = Local;
+GMAT DVA.Origin = Earth;
+GMAT DVA.Axes = VNB;
+GMAT DVA.Element1 = 0.0;
+
+Create ImpulsiveBurn DVB;
+GMAT DVB.CoordinateSystem = Local;
+GMAT DVB.Origin = Earth;
+GMAT DVB.Axes = VNB;
+GMAT DVB.Element1 = 0.0;
+
+%---------- Force Model
+Create ForceModel FM;
+GMAT FM.CentralBody = Earth;
+GMAT FM.PrimaryBodies = {Earth};
+GMAT FM.SRP = Off;
+GMAT FM.Drag = None;
+
+Create Propagator Prop;
+GMAT Prop.FM = FM;
+GMAT Prop.Type = RungeKutta89;
+GMAT Prop.InitialStepSize = 60;
+GMAT Prop.MinStep = 0.001;
+GMAT Prop.MaxStep = 2700;
+
+%---------- Variable (target altitude in km)
+Create Variable TargetAlt;
+TargetAlt = 35786.0;
+
+Create ReportFile EphRpt;
+GMAT EphRpt.Filename = 'ephemeris.txt';
+GMAT EphRpt.Precision = 16;
+GMAT EphRpt.Add = {SC.UTCGregorian, SC.EarthMJ2000Eq.X, SC.EarthMJ2000Eq.Y, SC.EarthMJ2000Eq.Z, SC.EarthMJ2000Eq.VX, SC.EarthMJ2000Eq.VY, SC.EarthMJ2000Eq.VZ};
+GMAT EphRpt.WriteHeaders = true;
+GMAT EphRpt.WriteReport = true;
+
+Create ReportFile DvRpt;
+GMAT DvRpt.Filename = 'orbit_elements.txt';
+GMAT DvRpt.Add = {SC.UTCGregorian, SC.Earth.Altitude, SC.ECC, SC.INC, SC.VelocityMagnitude, SC.DVA.Element1, SC.DVB.Element1};
+GMAT DvRpt.WriteHeaders = true;
+GMAT DvRpt.WriteReport = true;
+
+%---------- Mission Sequence
+BeginMissionSequence;
+
+Target DC {SolveMode = Solve, ExitMode = DiscardAndContinue};
+   Vary DC(DVA.Element1 = 0.1, {Perturbation = 0.0001, Lower = 0.0, Upper = 10, MaxStep = 0.2});
+   Maneuver DVA(SC);
+   Propagate Prop(SC) {SC.Apoapsis};
+   Achieve DC(SC.Earth.RMAG = 6371 + TargetAlt, {Tolerance = 0.1});
+EndTarget;
+
+Propagate Prop(SC) {SC.Apoapsis};
+
+Target DC {SolveMode = Solve, ExitMode = DiscardAndContinue};
+   Vary DC(DVB.Element1 = 0.1, {Perturbation = 0.0001, Lower = 0.0, Upper = 10, MaxStep = 0.2});
+   Maneuver DVB(SC);
+   Propagate Prop(SC) {SC.ElapsedSecs = 100};
+   Achieve DC(SC.ECC = 0.001, {Tolerance = 0.0001});
+EndTarget;
+
+Propagate Prop(SC) {SC.ElapsedDays = 0.5};

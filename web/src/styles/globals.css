@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS custom properties ── */
+@layer base {
+  :root {
+    --bg:           220 27% 8%;
+    --bg-surface:   220 25% 11%;
+    --bg-card:      220 23% 14%;
+    --bg-elevated:  220 22% 17%;
+    --border:       220 18% 22%;
+    --border-subtle:220 18% 18%;
+    --text:         210 40% 92%;
+    --text-muted:   215 20% 55%;
+    --text-faint:   215 15% 38%;
+    --accent:       217 91% 65%;
+    --accent-dim:   217 70% 45%;
+    --warm:         25 95% 60%;
+    --success:      142 72% 50%;
+    --warning:      38 92% 55%;
+    --danger:       0 72% 60%;
+    --radius:       8px;
+  }
+
+  html.light {
+    --bg:           210 20% 97%;
+    --bg-surface:   0 0% 100%;
+    --bg-card:      210 17% 95%;
+    --bg-elevated:  210 15% 93%;
+    --border:       214 30% 86%;
+    --border-subtle:214 25% 91%;
+    --text:         222 47% 11%;
+    --text-muted:   215 18% 45%;
+    --text-faint:   215 15% 65%;
+    --accent:       217 91% 55%;
+    --accent-dim:   217 70% 70%;
+    --warm:         25 95% 50%;
+    --success:      142 72% 40%;
+    --warning:      38 92% 45%;
+    --danger:       0 72% 52%;
+  }
+
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  body {
+    background-color: hsl(var(--bg));
+    color: hsl(var(--text));
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ── Utility classes ── */
+@layer utilities {
+  .bg-surface   { background-color: hsl(var(--bg-surface)); }
+  .bg-card      { background-color: hsl(var(--bg-card)); }
+  .bg-elevated  { background-color: hsl(var(--bg-elevated)); }
+  .text-base    { color: hsl(var(--text)); }
+  .text-muted   { color: hsl(var(--text-muted)); }
+  .text-faint   { color: hsl(var(--text-faint)); }
+  .border-base  { border-color: hsl(var(--border)); }
+  .border-subtle { border-color: hsl(var(--border-subtle)); }
+  .accent       { color: hsl(var(--accent)); }
+  .text-accent  { color: hsl(var(--accent)); }
+  .text-warm    { color: hsl(var(--warm)); }
+  .text-success { color: hsl(var(--success)); }
+  .text-warning { color: hsl(var(--warning)); }
+  .text-danger  { color: hsl(var(--danger)); }
+  .font-mono    { font-family: 'JetBrains Mono', Menlo, monospace; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-faint)); }
+
+/* ── Prose in chat messages ── */
+.prose-chat h1, .prose-chat h2, .prose-chat h3 {
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.4em;
+  color: hsl(var(--text));
+}
+.prose-chat p { margin: 0.5em 0; line-height: 1.65; }
+.prose-chat ul, .prose-chat ol { padding-left: 1.4em; margin: 0.4em 0; }
+.prose-chat li { margin: 0.2em 0; }
+.prose-chat code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: hsl(var(--bg-elevated));
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  color: hsl(var(--accent));
+}
+.prose-chat pre {
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+.prose-chat pre code { background: none; padding: 0; color: hsl(var(--text)); }
+.prose-chat strong { font-weight: 600; color: hsl(var(--text)); }
+.prose-chat em { font-style: italic; color: hsl(var(--text-muted)); }
+.prose-chat table { width: 100%; border-collapse: collapse; margin: 0.75em 0; font-size: 0.9em; }
+.prose-chat th {
+  text-align: left;
+  padding: 0.4em 0.75em;
+  background: hsl(var(--bg-elevated));
+  border-bottom: 1px solid hsl(var(--border));
+  font-weight: 600;
+  color: hsl(var(--text-muted));
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.prose-chat td {
+  padding: 0.4em 0.75em;
+  border-bottom: 1px solid hsl(var(--border-subtle));
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+}
+
+/* ── Leaflet override for dark map ── */
+.leaflet-container { background: hsl(var(--bg)); }
+.leaflet-tile-pane { filter: brightness(0.85) saturate(0.7); }
+html.light .leaflet-tile-pane { filter: none; }
+
+/* ── CesiumJS widget overrides ── */
+.cesium-widget-credits { display: none !important; }
+.cesium-credit-logoContainer { display: none !important; }
+
+/* ── Loading shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--bg-card)) 25%,
+    hsl(var(--bg-elevated)) 50%,
+    hsl(var(--bg-card)) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+}

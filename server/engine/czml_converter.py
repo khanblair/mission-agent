@@ -28,6 +28,7 @@ def ephemeris_to_czml(rows: list[dict], spacecraft_name: str = "Spacecraft") -> 
     end_iso = _parse_gmat_time_iso(rows[-1]["t"])
     interval = f"{start_iso}/{end_iso}"
 
+    # CZML header packet
     header = {
         "id": "document",
         "name": "Mission Agent — Orbit",
@@ -41,6 +42,7 @@ def ephemeris_to_czml(rows: list[dict], spacecraft_name: str = "Spacecraft") -> 
         },
     }
 
+    # Cartesian positions: [t_offset_sec, x, y, z, ...]
     t0_str = rows[0]["t"]
     try:
         t0 = datetime.strptime(t0_str.strip(), "%d %b %Y %H:%M:%S.%f").replace(tzinfo=timezone.utc)

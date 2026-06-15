@@ -1,0 +1,75 @@
+%General Mission Analysis Tool(GMAT) Script
+%Template: Ground Station Contact Analysis
+%Purpose: Find access windows between spacecraft and a ground station.
+
+%---------- Spacecraft
+Create Spacecraft SC;
+GMAT SC.DateFormat = UTCGregorian;
+GMAT SC.Epoch = '01 Jan 2024 00:00:00.000';
+GMAT SC.CoordinateSystem = EarthMJ2000Eq;
+GMAT SC.DisplayStateType = Keplerian;
+GMAT SC.SMA = 6928.0;
+GMAT SC.ECC = 0.001;
+GMAT SC.INC = 51.6;
+GMAT SC.RAAN = 0.0;
+GMAT SC.AOP = 0.0;
+GMAT SC.TA = 0.0;
+GMAT SC.DryMass = 100.0;
+GMAT SC.Cd = 2.2;
+GMAT SC.Cr = 1.8;
+GMAT SC.DragArea = 1.0;
+GMAT SC.SRPArea = 1.0;
+
+%---------- Ground Station
+Create GroundStation GS;
+GMAT GS.CentralBody = Earth;
+GMAT GS.StateType = Spherical;
+GMAT GS.HorizonReference = Ellipsoid;
+GMAT GS.Location1 = 40.7128;
+GMAT GS.Location2 = -74.0060;
+GMAT GS.Location3 = 0.010;
+GMAT GS.Id = 'GS01';
+GMAT GS.MinimumElevationAngle = 5.0;
+
+%---------- Force Model
+Create ForceModel FM;
+GMAT FM.CentralBody = Earth;
+GMAT FM.PrimaryBodies = {Earth};
+GMAT FM.PointMasses = {Luna, Sun};
+GMAT FM.SRP = On;
+GMAT FM.GravityField.Earth.Degree = 10;
+GMAT FM.GravityField.Earth.Order = 10;
+GMAT FM.Drag.AtmosphereModel = JacchiaRoberts;
+
+Create Propagator Prop;
+GMAT Prop.FM = FM;
+GMAT Prop.Type = RungeKutta89;
+GMAT Prop.InitialStepSize = 30;
+GMAT Prop.MinStep = 0.001;
+GMAT Prop.MaxStep = 2700;
+
+%---------- Contact Locator
+Create ContactLocator CL;
+GMAT CL.Observers = {GS};
+GMAT CL.Target = SC;
+GMAT CL.Filename = 'contact_report.txt';
+GMAT CL.OccultingBodies = {Earth};
+GMAT CL.InputEpochFormat = UTCGregorian;
+GMAT CL.InitialEpoch = '01 Jan 2024 00:00:00.000';
+GMAT CL.StepSize = 10;
+GMAT CL.FinalEpoch = '02 Jan 2024 00:00:00.000';
+GMAT CL.UseLightTimeDelay = true;
+GMAT CL.UseStellarAberration = true;
+GMAT CL.WriteReport = true;
+GMAT CL.RunMode = Automatic;
+
+Create ReportFile EphRpt;
+GMAT EphRpt.Filename = 'ephemeris.txt';
+GMAT EphRpt.Precision = 16;
+GMAT EphRpt.Add = {SC.UTCGregorian, SC.EarthMJ2000Eq.X, SC.EarthMJ2000Eq.Y, SC.EarthMJ2000Eq.Z, SC.EarthMJ2000Eq.VX, SC.EarthMJ2000Eq.VY, SC.EarthMJ2000Eq.VZ};
+GMAT EphRpt.WriteHeaders = true;
+GMAT EphRpt.WriteReport = true;
+
+%---------- Mission Sequence
+BeginMissionSequence;
+Propagate Prop(SC) {SC.ElapsedDays = 1.0};

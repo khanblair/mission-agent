@@ -5,9 +5,9 @@ import math
 from datetime import datetime, timezone
 
 
-_J2000_UNIX = 946727935.816  # Unix timestamp of J2000.0
+_J2000_UNIX = 946727935.816  # Unix timestamp of J2000.0 (2000-01-01 11:58:55.816 UTC)
 _OMEGA_EARTH = 7.2921150e-5  # Earth rotation rate rad/s
-_GMST_J2000 = 1.7533685892  # GMST at J2000 in radians
+_GMST_J2000 = 1.7533685892  # GMST at J2000 in radians (≈ 100.46°)
 
 
 def _parse_gmat_time(t_str: str) -> float:

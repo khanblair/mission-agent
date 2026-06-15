@@ -46,6 +46,7 @@ async def _run_gmat(script: str, run_id: str, output_dir: Path) -> RunResult:
     """Run via GMAT subprocess."""
     result = RunResult(run_id, output_dir)
 
+    # Rewrite output filenames in script to point to our output dir
     patched = _patch_report_paths(script, output_dir)
     result.script_path.write_text(patched)
 
@@ -136,11 +137,13 @@ def _write_mock_ephemeris(path: Path, p: dict) -> None:
         M = n * t + _ta_to_ma(ta0, e)
         ta = _solve_kepler(M, e)
         r = a * (1 - e**2) / (1 + e * math.cos(ta))
+        # Perifocal frame
         xp = r * math.cos(ta)
         yp = r * math.sin(ta)
         vp = math.sqrt(MU / (a * (1 - e**2)))
         vxp = -vp * math.sin(ta)
         vyp = vp * (e + math.cos(ta))
+        # Rotate to ECI
         x, y, z = _pqw_to_eci(xp, yp, 0, inc, raan, aop)
         vx, vy, vz = _pqw_to_eci(vxp, vyp, 0, inc, raan, aop)
         ts = (epoch + timedelta(seconds=t)).strftime("%d %b %Y %H:%M:%S.000")

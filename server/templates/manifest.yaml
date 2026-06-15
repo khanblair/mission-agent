@@ -1,0 +1,86 @@
+templates:
+  - id: leo_propagate
+    file: leo_propagate.script
+    description: Propagate a spacecraft in Low Earth Orbit and generate an ephemeris
+    triggers:
+      - propagate
+      - propagation
+      - orbit design
+      - LEO
+      - altitude
+      - inclination
+    required_params:
+      - sma_or_altitude
+      - inclination
+    optional_params:
+      - eccentricity
+      - raan
+      - duration_days
+      - epoch
+
+  - id: sunsync_design
+    file: sunsync_design.script
+    description: Design a sun-synchronous orbit at a given altitude
+    triggers:
+      - sun-synchronous
+      - SSO
+      - dawn-dusk
+      - sun sync
+    required_params:
+      - altitude_km
+    optional_params:
+      - ltan
+      - duration_days
+
+  - id: ground_contact
+    file: ground_contact.script
+    description: Compute contact windows between a spacecraft and one or more ground stations
+    triggers:
+      - ground station
+      - contact
+      - access
+      - coverage
+      - passes
+      - visibility
+    required_params:
+      - orbit_params
+      - ground_station_location
+    optional_params:
+      - min_elevation_deg
+      - duration_days
+
+  - id: hohmann_transfer
+    file: hohmann_transfer.script
+    description: Plan a Hohmann transfer maneuver between two circular orbits
+    triggers:
+      - Hohmann
+      - transfer
+      - maneuver
+      - delta-v
+      - orbit raising
+      - orbit lowering
+      - burn
+    required_params:
+      - initial_alt_km
+      - target_alt_km
+    optional_params:
+      - inclination
+      - spacecraft_mass_kg
+
+  - id: deorbit_lifetime
+    file: deorbit_lifetime.script
+    description: Estimate orbital lifetime under drag and the delta-v to deorbit deliberately
+    triggers:
+      - deorbit
+      - lifetime
+      - reentry
+      - decay
+      - atmospheric drag
+      - end of life
+    required_params:
+      - altitude_km
+      - spacecraft_params
+    optional_params:
+      - solar_flux
+      - cd
+      - drag_area

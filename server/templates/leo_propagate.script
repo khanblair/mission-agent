@@ -1,0 +1,62 @@
+%General Mission Analysis Tool(GMAT) Script
+%Template: LEO Propagation
+%Purpose: Propagate a spacecraft in Low Earth Orbit for the specified duration.
+%Outputs: ephemeris.txt (position/velocity), orbit_elements.txt (Keplerian elements)
+
+%---------- Spacecraft
+Create Spacecraft SC;
+GMAT SC.DateFormat = UTCGregorian;
+GMAT SC.Epoch = '01 Jan 2024 00:00:00.000';
+GMAT SC.CoordinateSystem = EarthMJ2000Eq;
+GMAT SC.DisplayStateType = Keplerian;
+GMAT SC.SMA = 6928.0;
+GMAT SC.ECC = 0.001;
+GMAT SC.INC = 51.6;
+GMAT SC.RAAN = 0.0;
+GMAT SC.AOP = 0.0;
+GMAT SC.TA = 0.0;
+GMAT SC.DryMass = 100.0;
+GMAT SC.Cd = 2.2;
+GMAT SC.Cr = 1.8;
+GMAT SC.DragArea = 1.0;
+GMAT SC.SRPArea = 1.0;
+
+%---------- ForceModels
+Create ForceModel FM;
+GMAT FM.CentralBody = Earth;
+GMAT FM.PrimaryBodies = {Earth};
+GMAT FM.PointMasses = {Luna, Sun};
+GMAT FM.SRP = On;
+GMAT FM.GravityField.Earth.Degree = 10;
+GMAT FM.GravityField.Earth.Order = 10;
+GMAT FM.Drag.AtmosphereModel = JacchiaRoberts;
+
+%---------- Propagators
+Create Propagator Prop;
+GMAT Prop.FM = FM;
+GMAT Prop.Type = RungeKutta89;
+GMAT Prop.InitialStepSize = 60;
+GMAT Prop.MinStep = 0.001;
+GMAT Prop.MaxStep = 2700;
+GMAT Prop.MaxStepAttempts = 50;
+
+%---------- Subscribers
+Create ReportFile EphRpt;
+GMAT EphRpt.Filename = 'ephemeris.txt';
+GMAT EphRpt.Precision = 16;
+GMAT EphRpt.Add = {SC.UTCGregorian, SC.EarthMJ2000Eq.X, SC.EarthMJ2000Eq.Y, SC.EarthMJ2000Eq.Z, SC.EarthMJ2000Eq.VX, SC.EarthMJ2000Eq.VY, SC.EarthMJ2000Eq.VZ};
+GMAT EphRpt.WriteHeaders = true;
+GMAT EphRpt.ColumnWidth = 23;
+GMAT EphRpt.WriteReport = true;
+
+Create ReportFile ElemRpt;
+GMAT ElemRpt.Filename = 'orbit_elements.txt';
+GMAT ElemRpt.Precision = 10;
+GMAT ElemRpt.Add = {SC.UTCGregorian, SC.Earth.Altitude, SC.ECC, SC.INC, SC.RAAN, SC.AOP, SC.TA};
+GMAT ElemRpt.WriteHeaders = true;
+GMAT ElemRpt.ColumnWidth = 23;
+GMAT ElemRpt.WriteReport = true;
+
+%---------- Mission Sequence
+BeginMissionSequence;
+Propagate Prop(SC) {SC.ElapsedDays = 1.0};
