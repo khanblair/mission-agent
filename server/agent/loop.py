@@ -88,7 +88,7 @@ class AgentLoop:
             for tc in tool_calls:
                 logger.info("Executing tool: %s(%s)", tc["name"], list(tc["input"].keys()))
                 try:
-                    result = await execute_tool(tc["name"], tc["input"])
+                    result = await execute_tool(tc["name"], tc["input"], mission_id=self.mission_id)
                     if tc["name"] == "run_script" and "run_id" in result:
                         self.last_run_data = result
                 except Exception as exc:

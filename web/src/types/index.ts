@@ -29,6 +29,7 @@ export interface RunResult {
   czml: unknown[]
   elements_sample: OrbitalElements[]
   validation?: ValidationResult
+  script?: string
 }
 
 export interface OrbitSummary {
@@ -62,6 +63,15 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
   content: string
   created_at?: string
+}
+
+export interface ChatSession {
+  id: string
+  mission_id: string
+  name: string
+  created_at: string
+  updated_at: string
+  messages?: ChatMessage[]
 }
 
 export interface ValidationResult {

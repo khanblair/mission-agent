@@ -19,9 +19,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         'bg-accent-500 hover:bg-accent-600 text-white shadow-sm focus-visible:ring-accent-400',
       secondary:
-        'bg-elevated border border-base text-base hover:bg-card focus-visible:ring-accent-400',
+        'bg-elevated border border-base text-fg hover:bg-card focus-visible:ring-accent-400',
       ghost:
-        'text-muted hover:text-base hover:bg-elevated focus-visible:ring-accent-400',
+        'text-muted hover:text-fg hover:bg-elevated focus-visible:ring-accent-400',
       danger:
         'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 focus-visible:ring-red-400',
       warm:

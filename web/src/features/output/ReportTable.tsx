@@ -108,8 +108,8 @@ function StatCard({ label, value, unit, color }: { label: string; value: string;
     accent: 'text-accent-400',
     warm: 'text-orange-400',
     success: 'text-green-400',
-    default: 'text-base',
-  }[color] ?? 'text-base'
+    default: 'text-fg',
+  }[color] ?? 'text-fg'
 
   return (
     <div className="bg-card border border-base rounded-xl p-3">

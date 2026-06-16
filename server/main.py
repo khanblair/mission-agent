@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .db import init_db
-from .routes import chat, engine, missions
+from .routes import chat, engine, missions, sessions
 
 
 @asynccontextmanager
@@ -28,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(missions.router, prefix="/api/missions", tags=["missions"])
+app.include_router(sessions.router, prefix="/api/missions/{mission_id}/sessions", tags=["sessions"])
 app.include_router(engine.router, prefix="/api/engine", tags=["engine"])
 app.include_router(chat.router, tags=["chat"])
 

@@ -102,4 +102,11 @@ async def list_runs(mission_id: str) -> list[dict[str, Any]]:
             (mission_id,),
         ) as cur:
             rows = await cur.fetchall()
-    return [row_to_dict(r) for r in rows]
+
+    result = []
+    for row in rows:
+        d = row_to_dict(row)
+        raw = d.pop("result_json", None)
+        d["result"] = json.loads(raw) if raw else None
+        result.append(d)
+    return result

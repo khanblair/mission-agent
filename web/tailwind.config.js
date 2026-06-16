@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  safelist: ['text-fg', 'text-muted', 'text-faint'],
   darkMode: 'class',
   theme: {
     extend: {

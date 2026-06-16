@@ -56,7 +56,7 @@ export function ControlBar() {
           className={`flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all duration-150 ${
             scriptVisible
               ? 'bg-accent-500/20 text-accent-400 border border-accent-500/40'
-              : 'text-muted hover:text-base hover:bg-elevated border border-transparent'
+              : 'text-muted hover:text-fg hover:bg-elevated border border-transparent'
           }`}
         >
           <Code2 size={12} />

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { ChatMessage, Mission, OutputTab, RunResult, Theme } from '../types'
+import type { ChatMessage, ChatSession, Mission, OutputTab, RunResult, Theme } from '../types'
 
 interface AppState {
   // Theme
@@ -28,6 +28,12 @@ interface AppState {
   setIsRunning: (v: boolean) => void
   lastRunResult: RunResult | null
   setLastRunResult: (r: RunResult | null) => void
+
+  // Chat sessions
+  sessions: ChatSession[]
+  setSessions: (s: ChatSession[]) => void
+  activeSession: ChatSession | null
+  setActiveSession: (s: ChatSession | null) => void
 
   // UI tabs
   outputTab: OutputTab
@@ -87,6 +93,12 @@ export const useStore = create<AppState>()(
       setIsRunning: (v) => set({ isRunning: v }),
       lastRunResult: null,
       setLastRunResult: (r) => set({ lastRunResult: r }),
+
+      // Sessions
+      sessions: [],
+      setSessions: (sessions) => set({ sessions }),
+      activeSession: null,
+      setActiveSession: (activeSession) => set({ activeSession }),
 
       // UI
       outputTab: '3d',

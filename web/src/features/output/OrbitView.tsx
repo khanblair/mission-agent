@@ -19,10 +19,16 @@ export function OrbitView() {
         const Cesium: any = await import('cesium')
         if (!containerRef.current || viewerRef.current) return
 
-        Cesium.Ion.defaultAccessToken =
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkZWZhdWx0LXRva2VuIiwiaWF0IjoxNjAwMDAwMDAwfQ.placeholder'
+        // Use UrlTemplateImageryProvider — synchronous API, unchanged since Cesium 1.x.
+        // ESRI World Imagery: free, no token, same source as the ground track view.
+        // Do NOT set Ion.defaultAccessToken — we use no Ion-hosted assets.
+        const imageryProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          maximumLevel: 18,
+        })
 
         const viewer = new Cesium.Viewer(containerRef.current, {
+          baseLayer: false,   // suppress default Bing/Ion request
           animation: true,
           timeline: true,
           homeButton: false,
@@ -35,14 +41,39 @@ export function OrbitView() {
           selectionIndicator: false,
           shadows: false,
           terrainShadows: Cesium.ShadowMode.DISABLED,
-          imageryProvider: new Cesium.TileMapServiceImageryProvider({
-            url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
-          }),
         })
 
+        // Assign immediately so CZML loader can find the viewer even if
+        // subsequent imagery setup throws (avoids the ref staying null).
+        viewerRef.current = viewer
+
+        // Add ESRI World Imagery as layer 0 (base). Use .add() — never
+        // addImageryProvider(), which was removed in Cesium 1.100+.
+        // No label overlay — ESRI's "Boundaries & Places" service has a solid
+        // teal ocean background that completely covers the satellite imagery.
+        viewer.imageryLayers.add(
+          new Cesium.ImageryLayer(imageryProvider),
+          0,
+        )
+
+        // Atmosphere & day/night terminator
         viewer.scene.globe.enableLighting = true
         viewer.scene.skyAtmosphere.show = true
-        viewerRef.current = viewer
+        viewer.scene.globe.atmosphereLightIntensity = 10.0
+
+        // Dark space background
+        viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#02050f')
+
+        // Initial camera — Earth centered, 22,000 km out, slight overhead tilt
+        viewer.camera.lookAt(
+          Cesium.Cartesian3.ZERO,
+          new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(30),
+            Cesium.Math.toRadians(-30),
+            22_000_000,
+          ),
+        )
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY)
       } catch (e) {
         console.error('Cesium init failed:', e)
       }
@@ -77,16 +108,28 @@ export function OrbitView() {
         await viewer.dataSources.add(ds)
         URL.revokeObjectURL(blobUrl)
 
-        const entity = ds.entities.values[1]
-        if (entity) {
-          viewer.trackedEntity = entity
-          viewer.clock.startTime = ds.clock.startTime
-          viewer.clock.stopTime = ds.clock.stopTime
-          viewer.clock.currentTime = ds.clock.startTime
-          viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP
-          viewer.clock.multiplier = 60
-          viewer.timeline.zoomTo(ds.clock.startTime, ds.clock.stopTime)
-        }
+        // Set the simulation clock from the CZML document packet
+        viewer.clock.startTime = ds.clock.startTime
+        viewer.clock.stopTime = ds.clock.stopTime
+        viewer.clock.currentTime = ds.clock.startTime
+        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP
+        viewer.clock.multiplier = 60
+        viewer.timeline.zoomTo(ds.clock.startTime, ds.clock.stopTime)
+
+        // lookAt(Cartesian3.ZERO) GUARANTEES Earth center is at the exact
+        // center of the viewport — no pitch arithmetic needed.
+        // HeadingPitchRange positions the camera 22,000 km from Earth center
+        // at 30° above the equatorial plane for a nice orbital perspective.
+        // lookAtTransform(IDENTITY) immediately unlocks free navigation.
+        viewer.camera.lookAt(
+          Cesium.Cartesian3.ZERO,
+          new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(30),   // heading — slight east rotation
+            Cesium.Math.toRadians(-30),  // pitch — camera above equatorial plane
+            22_000_000,                   // 22,000 km from Earth center
+          ),
+        )
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY)
       } catch (e) {
         console.error('CZML load failed:', e)
       }
@@ -98,11 +141,11 @@ export function OrbitView() {
   const hasCzml = Boolean(lastRunResult?.czml?.length)
 
   return (
-    <div className="relative w-full h-full bg-space-950">
-      {/* Cesium container */}
+    <div className="relative w-full h-full" style={{ background: '#02050f' }}>
+      {/* Cesium mounts here */}
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Empty state */}
+      {/* Empty state — only when no run has completed */}
       {!hasCzml && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none">
           <div className="w-16 h-16 rounded-full border border-accent-500/20 flex items-center justify-center bg-space-900/80">
@@ -114,14 +157,16 @@ export function OrbitView() {
           </div>
           {/* Starfield dots */}
           <div className="absolute inset-0 overflow-hidden">
-            {Array.from({ length: 40 }).map((_, i) => (
+            {Array.from({ length: 60 }).map((_, i) => (
               <div
                 key={i}
-                className="absolute w-0.5 h-0.5 rounded-full bg-white/20"
+                className="absolute rounded-full bg-white"
                 style={{
+                  width: Math.random() > 0.85 ? '2px' : '1px',
+                  height: Math.random() > 0.85 ? '2px' : '1px',
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
-                  opacity: Math.random() * 0.6 + 0.1,
+                  opacity: Math.random() * 0.7 + 0.1,
                 }}
               />
             ))}

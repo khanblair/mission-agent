@@ -107,7 +107,7 @@ function TreeSection({
           className={clsx('text-muted transition-transform duration-150', expanded && 'rotate-90')}
         />
         <span className="text-muted">{icon}</span>
-        <span className="text-xs font-medium text-base">{label}</span>
+        <span className="text-xs font-medium text-fg">{label}</span>
       </button>
       {expanded && (
         <div className="ml-7 mr-2 mb-2 bg-card border border-base rounded-lg overflow-hidden animate-fade-in">

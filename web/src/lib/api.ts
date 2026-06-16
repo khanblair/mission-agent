@@ -1,4 +1,4 @@
-import type { EngineStatus, Mission, Run, RunResult } from '../types'
+import type { ChatSession, EngineStatus, Mission, Run, RunResult } from '../types'
 
 const BASE = '/api'
 
@@ -11,10 +11,11 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     const text = await res.text()
     throw new Error(`${res.status} ${res.statusText}: ${text}`)
   }
+  // 204 No Content — return undefined cast as T
+  if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }
 
-// Missions
 export const api = {
   missions: {
     list: () => req<Mission[]>('/missions'),
@@ -24,6 +25,25 @@ export const api = {
       req<Mission>(`/missions/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     delete: (id: string) => req<void>(`/missions/${id}`, { method: 'DELETE' }),
     runs: (id: string) => req<Run[]>(`/missions/${id}/runs`),
+  },
+
+  sessions: {
+    list: (missionId: string) =>
+      req<ChatSession[]>(`/missions/${missionId}/sessions`),
+    create: (missionId: string, name = 'New Chat') =>
+      req<ChatSession>(`/missions/${missionId}/sessions`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      }),
+    get: (missionId: string, sessionId: string) =>
+      req<ChatSession>(`/missions/${missionId}/sessions/${sessionId}`),
+    update: (missionId: string, sessionId: string, name: string) =>
+      req<ChatSession>(`/missions/${missionId}/sessions/${sessionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name }),
+      }),
+    delete: (missionId: string, sessionId: string) =>
+      req<void>(`/missions/${missionId}/sessions/${sessionId}`, { method: 'DELETE' }),
   },
 
   engine: {

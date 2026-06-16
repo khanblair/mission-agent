@@ -59,9 +59,13 @@
   .bg-surface   { background-color: hsl(var(--bg-surface)); }
   .bg-card      { background-color: hsl(var(--bg-card)); }
   .bg-elevated  { background-color: hsl(var(--bg-elevated)); }
-  .text-base    { color: hsl(var(--text)); }
-  .text-muted   { color: hsl(var(--text-muted)); }
-  .text-faint   { color: hsl(var(--text-faint)); }
+
+  /* text-fg = primary foreground color (renamed from text-base to avoid
+     conflicting with Tailwind's built-in text-base font-size utility,
+     which caused a visible zoom on hover:text-base). */
+  .text-fg  { color: hsl(var(--text)); }
+  .text-muted { color: hsl(var(--text-muted)); }
+  .text-faint { color: hsl(var(--text-faint)); }
   .border-base  { border-color: hsl(var(--border)); }
   .border-subtle { border-color: hsl(var(--border-subtle)); }
   .accent       { color: hsl(var(--accent)); }
@@ -127,10 +131,17 @@
   font-size: 0.85em;
 }
 
-/* ── Leaflet override for dark map ── */
-.leaflet-container { background: hsl(var(--bg)); }
-.leaflet-tile-pane { filter: brightness(0.85) saturate(0.7); }
-html.light .leaflet-tile-pane { filter: none; }
+/* ── Leaflet override — satellite imagery, no dark filter ── */
+.leaflet-container { background: #02050f; }
+.leaflet-tile-pane { filter: none; }
+.leaflet-tooltip-dark {
+  background: rgba(2, 5, 15, 0.85);
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--text-muted));
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 3px 8px;
+}
 
 /* ── CesiumJS widget overrides ── */
 .cesium-widget-credits { display: none !important; }

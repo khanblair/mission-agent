@@ -98,13 +98,13 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
 
 # ── Tool executors ─────────────────────────────────────────────────────────────
 
-async def execute_tool(name: str, input_data: dict[str, Any]) -> dict[str, Any]:
+async def execute_tool(name: str, input_data: dict[str, Any], mission_id: str | None = None) -> dict[str, Any]:
     if name == "get_template":
         return _get_template(input_data["template_id"])
     elif name == "validate_script":
         return _validate(input_data["script"])
     elif name == "run_script":
-        return await _run(input_data["script"])
+        return await _run(input_data["script"], mission_id=mission_id)
     elif name == "compute_sso_inclination":
         return _sso(input_data["altitude_km"])
     elif name == "compute_hohmann_dv":
@@ -129,7 +129,10 @@ def _validate(script: str) -> dict[str, Any]:
     return result.to_dict()
 
 
-async def _run(script: str) -> dict[str, Any]:
+async def _run(script: str, mission_id: str | None = None) -> dict[str, Any]:
+    import json
+    from ..db import get_db, new_id
+
     result = await engine_run(script)
     eph = parse_ephemeris(result.ephemeris_path)
     elements = parse_orbit_elements(result.orbit_elements_path)
@@ -139,7 +142,7 @@ async def _run(script: str) -> dict[str, Any]:
     czml = ephemeris_to_czml(eph[:720])
     validation = validate_results(summary, groundtrack)
 
-    return {
+    run_data = {
         "run_id": result.run_id,
         "mock": result.mock,
         "orbit_summary": summary,
@@ -147,7 +150,22 @@ async def _run(script: str) -> dict[str, Any]:
         "czml": czml,
         "validation": validation.to_dict(),
         "elements_sample": elements[:3] if elements else [],
+        "script": script,
     }
+
+    # Persist run to DB
+    try:
+        async with get_db() as db:
+            await db.execute(
+                """INSERT INTO runs (id, mission_id, status, script, output_dir, result_json, completed_at)
+                   VALUES (?, ?, 'completed', ?, ?, ?, datetime('now'))""",
+                (new_id(), mission_id, script, str(result.output_dir), json.dumps(run_data)),
+            )
+            await db.commit()
+    except Exception:
+        pass  # DB save is best-effort; don't break the agent loop
+
+    return run_data
 
 
 def _sso(altitude_km: float) -> dict[str, Any]:

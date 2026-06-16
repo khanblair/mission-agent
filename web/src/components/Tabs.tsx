@@ -25,8 +25,8 @@ export function Tabs<T extends string>({ tabs, active, onChange, size = 'md', cl
             'flex items-center gap-1.5 rounded-md font-medium transition-all duration-150',
             size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs',
             active === tab.id
-              ? 'bg-surface text-base shadow-sm'
-              : 'text-muted hover:text-base',
+              ? 'bg-surface text-fg shadow-sm'
+              : 'text-muted hover:text-fg',
           )}
         >
           {tab.icon && <span className="w-3.5 h-3.5">{tab.icon}</span>}
